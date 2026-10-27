@@ -37,7 +37,7 @@ print(df.isnull().sum())
 for col in df.select_dtypes(include="number").columns:
     df[col] = df[col].fillna(df[col].median())
 
-for col in df.select_dtypes(include=["object", "str"]).columns:
+for col in df.select_dtypes(include=["object", "string"]).columns:
     if df[col].isnull().any() and not df[col].mode().empty:
         df[col] = df[col].fillna(df[col].mode()[0])
 
@@ -57,18 +57,18 @@ print("Duplicate rows:", df.duplicated().sum())
 df = df.drop_duplicates()
 
 # Inspect categorical inconsistencies
-for col in df.select_dtypes(include=["object", "str"]).columns:
+for col in df.select_dtypes(include=["object", "string"]).columns:
     print(f"\n{col}:", df[col].value_counts(dropna=False))
 
 # Standardize text
-for col in df.select_dtypes(include=["object", "str"]).columns:
+for col in df.select_dtypes(include=["object", "string"]).columns:
     df[col] = df[col].str.strip().str.upper()
 
 # Fill missing values
 for col in df.select_dtypes(include="number").columns:
     df[col] = df[col].fillna(df[col].median())
 
-for col in df.select_dtypes(include=["object", "str"]).columns:
+for col in df.select_dtypes(include=["object", "string"]).columns:
     if df[col].isnull().any() and not df[col].mode().empty:
         df[col] = df[col].fillna(df[col].mode()[0])
 
@@ -80,96 +80,15 @@ print("Saved successfully!")
 <img width="595" height="481" alt="image" src="https://github.com/user-attachments/assets/8228d5d3-26c9-4a88-9e7a-ed14202a7506" />
 
 
-```
-df = pd.read_csv("heights.csv")
-print(df.head())
-print(df.describe())
-
-col = "height"  # Change if your column name differs
-
-Q1 = df[col].quantile(0.25)
-Q3 = df[col].quantile(0.75)
-IQR = Q3 - Q1
-
-lower = Q1 - 1.5 * IQR
-upper = Q3 + 1.5 * IQR
-
-outliers = df[(df[col] < lower) | (df[col] > upper)]
-print("Unusual measurements:\n", outliers)
-
-plt.boxplot(df[col].dropna())
-plt.title("Height Outlier Detection")
-plt.show()
-
-df["is_outlier"] = (df[col] < lower) | (df[col] > upper)
-df.to_csv("cleaned_heights.csv", index=False)
-print("Saved successfully!")
-```
-<img width="595" height="483" alt="image" src="https://github.com/user-attachments/assets/3d857f35-38a7-4552-a601-9c20830cbfc4" />
-
-```
-df = pd.read_csv("iris.csv")
-print(df.head())
-print(df.info())
-
-for col in df.select_dtypes(include="number").columns:
-    Q1 = df[col].quantile(0.25)
-    Q3 = df[col].quantile(0.75)
-    IQR = Q3 - Q1
-
-    outliers_iqr = df[(df[col] < Q1 - 1.5 * IQR) |
-                      (df[col] > Q3 + 1.5 * IQR)]
-    print(f"\nIQR outliers in {col}:\n", outliers_iqr[[col]])
-
-    z = np.abs(stats.zscore(df[col], nan_policy="omit"))
-    print(f"Z-score outliers in {col}:\n", df[z > 3][[col]])
-
-df.to_csv("cleaned_iris.csv", index=False)
-print("Saved successfully!")
-```
-<img width="600" height="750" alt="image" src="https://github.com/user-attachments/assets/2f9db559-faca-43c1-b7eb-a84cc0f7cf06" />
-
-```
-df = pd.read_csv("Loan_data.csv")
-
-print(df.head())
-print(df.info())
-print("Missing values:\n", df.isnull().sum())
-print("Duplicates:", df.duplicated().sum())
-
-df = df.drop_duplicates()
-
-# Fill numerical missing values
-for col in df.select_dtypes(include="number").columns:
-    df[col] = df[col].fillna(df[col].median())
-
-# Fill categorical missing values
-for col in df.select_dtypes(include=["object", "str"]).columns:
-    if df[col].isnull().any() and not df[col].mode().empty:
-        df[col] = df[col].fillna(df[col].mode()[0])
-
-# IQR and Z-score on ApplicantIncome
-col = "ApplicantIncome"
-
-Q1 = df[col].quantile(0.25)
-Q3 = df[col].quantile(0.75)
-IQR = Q3 - Q1
-
-outliers_iqr = df[(df[col] < Q1 - 1.5 * IQR) |
-                  (df[col] > Q3 + 1.5 * IQR)]
-print("\nIQR outliers:\n", outliers_iqr[[col]])
-
-z = np.abs(stats.zscore(df[col], nan_policy="omit"))
-print("\nZ-score outliers:\n", df[z > 3][[col]])
-
-df.to_csv("cleaned_Loan_data.csv", index=False)
-print("Saved successfully!")
-```
-<img width="600" height="783" alt="image" src="https://github.com/user-attachments/assets/dca3a5ea-7414-4169-870e-c78998863eaa" />
-<img width="603" height="496" alt="image" src="https://github.com/user-attachments/assets/9046ac48-2e14-41a1-8410-ff0d9ef892aa" />
-
 # Summary
-In this experiment, Python libraries were used to preprocess and improve the quality of datasets. Missing data was filled using appropriate statistical methods, and repeated entries were eliminated. The IQR and Z-score techniques were applied to identify unusual values, which were examined and filtered from the data. Graphs such as box plots and histograms were used to observe data distributions. The processed datasets were then exported as CSV files for future analysis and modeling.
+In this experiment, the Pandas library was used to clean two datasets, Data_set.csv and SAMPLEIDS.csv. The datasets were loaded using read_csv(), and head() and info() were used to inspect the data. Missing values were identified using isnull().sum(). Numerical missing values were filled with the median, while categorical missing values were filled with the mode. Duplicate records were removed from SAMPLEIDS.csv using drop_duplicates(), and text values were standardized by removing extra spaces and converting them to uppercase. Finally, the cleaned datasets were saved as CSV files using to_csv().
+1. Data_set.csv
+The dataset was checked for missing values using Pandas. Numerical missing values were filled with the median and categorical missing values with the mode. The cleaned data was saved as cleaned_Data_set.csv.
+
+2. SAMPLEIDS.csv
+Duplicate records and missing values were checked. Text values were standardized by removing extra spaces and converting them to uppercase. Missing values were filled using the median or mode, and the result was saved as cleaned_SAMPLEIDS.csv.
+
+
 
 # Result
 Thus the given data successfully performed data cleaning and saved the cleaned data to a file.
