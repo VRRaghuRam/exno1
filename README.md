@@ -21,74 +21,122 @@ STEP 5: Remove outliers using IQR
 STEP 6: Use zscore of to remove outliers
 
 # Coding and Output
+
+# Dataset.csv
 ```
+
 import pandas as pd
-import numpy as np
 from scipy import stats
-import matplotlib.pyplot as plt
-```
-```
-df = pd.read_csv("Data_set.csv")
+from google.colab import files
 
-print(df.head())
-print(df.info())
-print(df.isnull().sum())
+uploaded = files.upload()
+filename = next(iter(uploaded))
+df = pd.read_csv(filename)
 
-for col in df.select_dtypes(include="number").columns:
-    df[col] = df[col].fillna(df[col].median())
-
-for col in df.select_dtypes(include=["object", "string"]).columns:
-    if df[col].isnull().any() and not df[col].mode().empty:
-        df[col] = df[col].fillna(df[col].mode()[0])
-
-print("\nAfter cleaning:\n", df.isnull().sum())
-df.to_csv("cleaned_Data_set.csv", index=False)
-print("Saved successfully!")
-```
-<img width="596" height="788" alt="image" src="https://github.com/user-attachments/assets/a4869392-4c37-4830-a1b7-59329ba56fdd" />
-
-```
-df = pd.read_csv("SAMPLEIDS.csv")
-
-print(df.head())
-print("Missing values:\n", df.isnull().sum())
+print("1. ORIGINAL DATA")
+print("Rows and columns:", df.shape)
+print("\nMissing values:\n", df.isnull().sum())
 print("Duplicate rows:", df.duplicated().sum())
 
-df = df.drop_duplicates()
+df = df.dropna().drop_duplicates()
+print("\n2. DATA CLEANING")
+print("Missing values and duplicates removed.")
+print("Rows after cleaning:", len(df))
 
-# Inspect categorical inconsistencies
-for col in df.select_dtypes(include=["object", "string"]).columns:
-    print(f"\n{col}:", df[col].value_counts(dropna=False))
+num = df.select_dtypes(include="number")
 
-# Standardize text
-for col in df.select_dtypes(include=["object", "string"]).columns:
-    df[col] = df[col].str.strip().str.upper()
+if not num.empty:
+    Q1, Q3 = num.quantile(0.25), num.quantile(0.75)
+    IQR = Q3 - Q1
+    iqr_outliers = ((num < Q1 - 1.5 * IQR) |
+                    (num > Q3 + 1.5 * IQR)).any(axis=1)
+    print("\n3. IQR OUTLIER DETECTION")
+    print("Outlier rows detected:", iqr_outliers.sum())
+    df = df.loc[~iqr_outliers].copy()
+    print("Rows after IQR removal:", len(df))
 
-# Fill missing values
-for col in df.select_dtypes(include="number").columns:
-    df[col] = df[col].fillna(df[col].median())
+num = df.select_dtypes(include="number")
 
-for col in df.select_dtypes(include=["object", "string"]).columns:
-    if df[col].isnull().any() and not df[col].mode().empty:
-        df[col] = df[col].fillna(df[col].mode()[0])
+if not num.empty and len(num) > 1:
+    z = pd.DataFrame(stats.zscore(num), columns=num.columns,
+                     index=num.index)
+    z_outliers = (z.abs() > 3).any(axis=1)
+    print("\n4. Z-SCORE OUTLIER DETECTION")
+    print("Outlier rows detected:", z_outliers.sum())
+    df = df.loc[~z_outliers].copy()
+    print("Rows after Z-score removal:", len(df))
 
-print("\nRemaining missing values:\n", df.isnull().sum())
-df.to_csv("cleaned_SAMPLEIDS.csv", index=False)
-print("Saved successfully!")
+df.to_csv("Final_cleaned_data.csv", index=False)
+
+print("\n5. FINAL RESULT")
+print("Final dataset shape:", df.shape)
+print(df.head())
+print("\nFinal cleaned file saved successfully.")
+
+files.download("Final_cleaned_data.csv")
+
 ```
-<img width="597" height="786" alt="image" src="https://github.com/user-attachments/assets/f1762e28-72e6-4361-9999-4151878a866b" />
-<img width="595" height="481" alt="image" src="https://github.com/user-attachments/assets/8228d5d3-26c9-4a88-9e7a-ed14202a7506" />
+<img width="730" height="758" alt="image" src="https://github.com/user-attachments/assets/0a04fa41-4221-4021-a179-fb1d72931879" />
+
+# Sampleids.csv
+```
+
+import pandas as pd
+from scipy import stats
+from google.colab import files
+
+uploaded = files.upload()
+filename = next(iter(uploaded))
+df = pd.read_csv(filename)
+
+print("1. ORIGINAL DATA")
+print("Rows and columns:", df.shape)
+print("\nMissing values:\n", df.isnull().sum())
+print("Duplicate rows:", df.duplicated().sum())
+
+df = df.dropna().drop_duplicates()
+print("\n2. DATA CLEANING")
+print("Missing values and duplicates removed.")
+print("Rows after cleaning:", len(df))
+
+num = df.select_dtypes(include="number")
+
+if not num.empty:
+    Q1, Q3 = num.quantile(0.25), num.quantile(0.75)
+    IQR = Q3 - Q1
+    iqr_outliers = ((num < Q1 - 1.5 * IQR) |
+                    (num > Q3 + 1.5 * IQR)).any(axis=1)
+    print("\n3. IQR OUTLIER DETECTION")
+    print("Outlier rows detected:", iqr_outliers.sum())
+    df = df.loc[~iqr_outliers].copy()
+    print("Rows after IQR removal:", len(df))
+
+num = df.select_dtypes(include="number")
+
+if not num.empty and len(num) > 1:
+    z = pd.DataFrame(stats.zscore(num), columns=num.columns,
+                     index=num.index)
+    z_outliers = (z.abs() > 3).any(axis=1)
+    print("\n4. Z-SCORE OUTLIER DETECTION")
+    print("Outlier rows detected:", z_outliers.sum())
+    df = df.loc[~z_outliers].copy()
+    print("Rows after Z-score removal:", len(df))
+
+df.to_csv("Final_cleaned_data.csv", index=False)
+
+print("\n5. FINAL RESULT")
+print("Final dataset shape:", df.shape)
+print(df.head())
+print("\nFinal cleaned file saved successfully.")
+
+files.download("Final_cleaned_data.csv")
+
+```
+<img width="740" height="750" alt="image" src="https://github.com/user-attachments/assets/c7e7da55-d29a-478f-ac3d-be922e8911bc" />
 
 
 # Summary
-In this experiment, the Pandas library was used to clean two datasets, Data_set.csv and SAMPLEIDS.csv. The datasets were loaded using read_csv(), and head() and info() were used to inspect the data. Missing values were identified using isnull().sum(). Numerical missing values were filled with the median, while categorical missing values were filled with the mode. Duplicate records were removed from SAMPLEIDS.csv using drop_duplicates(), and text values were standardized by removing extra spaces and converting them to uppercase. Finally, the cleaned datasets were saved as CSV files using to_csv().
-1. Data_set.csv
-The dataset was checked for missing values using Pandas. Numerical missing values were filled with the median and categorical missing values with the mode. The cleaned data was saved as cleaned_Data_set.csv.
-
-2. SAMPLEIDS.csv
-Duplicate records and missing values were checked. Text values were standardized by removing extra spaces and converting them to uppercase. Missing values were filled using the median or mode, and the result was saved as cleaned_SAMPLEIDS.csv.
-
-
+In this experiment, Pandas and SciPy were used to perform data cleaning and outlier detection in Python. The dataset was uploaded through Google Colab, and its dimensions, missing values, and duplicate records were checked. Missing values and duplicate rows were removed using dropna() and drop_duplicates(). The IQR method was used to identify and remove outlier rows based on quartiles, while the Z-score method detected values that were more than three standard deviations from the mean. Finally, the cleaned dataset was saved as Final_cleaned_data.csv and downloaded for further analysis.
 
 # Result
-Thus the given data successfully performed data cleaning and saved the cleaned data to a file.
+The given data has been successfully read, cleaned by handling duplicates and missing values, and saved to a new file.
